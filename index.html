@@ -15,113 +15,128 @@
 
     <script>
 
-      //for GME Stock Data
-      d3.csv("GME_Stock_Data.csv").then( (data) =>{
-        console.log("stock volume: ")
-        console.log(data);
+    const svg = d3.select("svg#barchart");
+    const width = svg.attr("width");
+    const height = svg.attr("height");
+    const margins = {"top":0, "right":40, "bottom":40, "left":40};
+    const chartWidth = width - margins.left - margins.right;
+    const chartHeight = height - margins.top - margins.bottom;
 
-        //filter data
-        data.forEach( (d, i) => {
+    let annotations = svg.append("g").attr("id","annotations");
 
-            d["volNum"] = Number(d['Volume']);
-            d["openNum"] = Number(d["Open"]);
-            d["closeNum"] = Number(d["Close"]);
-            d["dateNum"] = Number(d["Date"].replace(/-/g,""));
+    let barChart = svg.append("g")
+                    .attr("transform","translate("+margins.left+","+margins.top+")");
 
-        })
+    //for GME Stock Data
+    d3.csv("GME_Stock_Data.csv").then( (data) =>{
+      console.log("stock volume: ")
+      console.log(data);
 
-        //filter out dates before 01/28
-        data = data.filter( (d) => {return d["dateNum"] > 20210127; } );
+      const timeParser =d3.timeParse('%Y-%m-%d')
+      //filter data
+      data.forEach( (d, i) => {
 
-        const svg = d3.select("svg#barchart");
-        const width = svg.attr("width");
-        const height = svg.attr("height");
-        const margins = {"top":0, "right":40, "bottom":40, "left":40};
-        const chartWidth = width - margins.left - margins.right;
-        const chartHeight = height - margins.top - margins.bottom;
+          d["volNum"] = Number(d['Volume']);
+          d["openNum"] = Number(d["Open"]);
+          d["closeNum"] = Number(d["Close"]);
+          d["dateNum"] = Number(d["Date"].replace(/-/g,""));
+          d['d3Date'] = timeParser(d["date"])
 
-        let annotations = svg.append("g").attr("id","annotations");
+      })
 
-        let bar = svg.append("g")
-                        .attr("transform","translate("+margins.left+","+margins.top+")");
+      //filter out dates before 01/28
+      data = data.filter( (d) => {return d["dateNum"] > 20210127; } );
 
-        //build Scales
-        const volumeExtent = d3.extent(data, d => d["volNum"] );
-        const volumeScale = d3.scaleLog().domain(volumeExtent).range([chartHeight, 0]);
+      //build Scales
+      const volumeExtent = d3.extent(data, d => d["volNum"] );
+      const volumeScale = d3.scaleLog().domain(volumeExtent).range([chartHeight, 0]);
 
-        const openCloseScale = d3.scaleSequential(d3.interpolateRdBu);
+      const openCloseScale = d3.scaleSequential(d3.interpolateRdBu);
 
-        let leftAxis = d3.axisLeft(volumeScale)
-                          .tickFormat(d3.format("~s"));
+      let leftAxis = d3.axisLeft(volumeScale)
+                        .tickFormat(d3.format("~s"));
 
-        let leftGridlines = d3.axisLeft(volumeScale)
-                              .tickSize(-chartWidth)
+      let leftGridlines = d3.axisLeft(volumeScale)
+                            .tickSize(-chartWidth)
+                            .tickFormat("")
+      //Y Left Axis
+      annotations.append("g")
+           .attr("class", "y gridlines")
+           .attr("transform","translate("+margins.left+","+margins.top+")")
+           .attr("color","lightgrey")
+           .call(leftGridlines);
+
+      annotations.append("g")
+                .attr("class", "yLeftaxis")
+                .attr("transform", "translate("+margins.left+", "+margins.top+" )" )
+                .call(leftAxis)
+
+      //build bars
+      data.forEach( (d, i) =>{
+        let bar = barChart.append("line")
+                          .attr("x1", volumeScale( d.volNum))
+                          .attr("x2", volumeScale( d.volNum))
+
+      })
+
+    })
+
+    d3.csv("WSB_gamestop_mentions.csv").then( (data) =>{
+      console.log("chatter: ");
+      console.log(data);
+
+      const timeParser =d3.timeParse('%Y-%m-%d')
+
+      data.forEach( (d,i) =>{
+
+          d["mentionsNum"] = Number(d["mentions_GME"] );
+          d['d3Date'] = timeParser(d["date"])
+
+      })
+      //filter out the data points that include weekends
+      // for (i=0; i<data.length; i++){
+      //
+      // }
+
+      //filter out 01/27
+      data = data.filter( (d) => {return d["mentionsNum"] > 0; } );
+      console.log(data);
+
+      //build Scales
+      const chatterExtent = d3.extent(data, d => d["mentionsNum"] );
+      const chatterScale = d3.scaleLog().domain(chatterExtent).range([chartHeight, 0] );
+
+      const dateExtent = d3.extent(data, d=> d["d3Date"] );
+      const dateScale = d3.scaleTime().domain(dateExtent).range([0, chartWidth] );
+
+      //X axis
+      let bottomAxis = d3.axisBottom(dateScale)
+                          .tickFormat(d3.timeFormat("%a %b %d"))
+
+      let bottomGridlines = d3.axisBottom(dateScale)
+                              .tickSize(-chartHeight)
                               .tickFormat("")
-        //Y Left Axis
-        annotations.append("g")
-             .attr("class", "y gridlines")
-             .attr("transform","translate("+margins.left+","+margins.top+")")
-             .attr("color","lightgrey")
-             .call(leftGridlines);
+      annotations.append("g")
+                  .attr("class", "x gridlines")
+                  .attr("transform", "translate("+margins.left+", "+(chartHeight+margins.top)+")")
+                  .attr("color", "lightgrey")
+                  .call(bottomGridlines);
 
-        annotations.append("g")
-                  .attr("class", "yLeftaxis")
-                  .attr("transform", "translate("+margins.left+", "+margins.top+" )" )
-                  .call(leftAxis)
+      annotations.append("g")
+                  .attr("class", "x axis")
+                  .attr("transform", "translate("+margins.left+", "+(chartHeight+margins.top)+")")
+                  .call(bottomAxis);
 
-      })
+      //Y Right axis
+      let yRightAxis = d3.axisRight(chatterScale)
+                          .tickFormat(d3.format("d"))
 
-      d3.csv("WSB_gamestop_mentions.csv").then( (data) =>{
-        console.log("chatter: ");
-        console.log(data);
+      annotations.append("g")
+                  .attr("class", "yRightAxis")
+                  .attr("transform", "translate("+(chartWidth+margins.left)+", "+margins.top+") ")
+                  .call(yRightAxis);
 
-        data.forEach( (d,i) =>{
-
-            d["dateNum"] = Number(d["date"].replace(/-/g,"") );
-            d["mentionsNum"] = Number(d["mentions_GME"] );
-
-        })
-
-        //filter out the data points that include weekends
-        // for (i=0; i<data.length; i++){
-        //
-        // }
-
-        //filter out 01/27
-        data = data.filter( (d) => {return d["mentionsNum"] > 0; } );
-        console.log(data);
-
-        const svg = d3.select("svg#barchart");
-        const width = svg.attr("width");
-        const height = svg.attr("height");
-        const margins = {"top": 0, "right": 40, "bottom": 40, "left": 40};
-        const chartWidth = width - margins.left - margins.right;
-        const chartHeight = height - margins.top - margins.bottom;
-
-        let annotations = svg.append("g").attr("id","annotations");
-
-        //build Scales
-        const chatterExtent = d3.extent(data, d => d["mentionsNum"] );
-        const chatterScale = d3.scaleLog().domain(chatterExtent).range([chartHeight, 0] );
-
-        const dateExtent = d3.extent(data, d=> d["dateNum"] );
-        const dateScale = d3.scaleLinear().domain(dateExtent).range([0, chartWidth] );
-
-        //X axis
-        let bottomAxis = d3.axisBottom(dateScale)
-
-        let bottomGridlines = d3.axisBottom(dateScale)
-                                .tickSize(-chartHeight)
-                                .tickFormat("")
-
-        annotations.append("g")
-                    .attr("class", "x axis")
-                    .attr("transform", "translate("+margins.left+", "+(chartHeight+margins.top)+")")
-                    .call(bottomAxis);
-
-        // annotations.append("g")
-        //             .attr("class", )
-      })
+    })
 
 
     </script>
