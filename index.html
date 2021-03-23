@@ -31,7 +31,6 @@
     d3.csv("GME_Stock_Data.csv").then( (data) =>{
       console.log("stock volume: ")
       console.log(data);
-
       const timeParser =d3.timeParse('%Y-%m-%d')
       //filter data
       data.forEach( (d, i) => {
@@ -40,10 +39,10 @@
           d["openNum"] = Number(d["Open"]);
           d["closeNum"] = Number(d["Close"]);
           d["dateNum"] = Number(d["Date"].replace(/-/g,""));
-          d['d3Date'] = timeParser(d["date"])
+          d['d3Date'] = timeParser(d["Date"]);
+          d["highLow"] = d["openNum"]-d["closeNum"];
 
       })
-
       //filter out dates before 01/28
       data = data.filter( (d) => {return d["dateNum"] > 20210127; } );
 
@@ -51,7 +50,15 @@
       const volumeExtent = d3.extent(data, d => d["volNum"] );
       const volumeScale = d3.scaleLog().domain(volumeExtent).range([chartHeight, 0]);
 
-      const openCloseScale = d3.scaleSequential(d3.interpolateRdBu);
+      //date scales for bar chart based off 21.03.15 lecture notes (genreScale)
+      const dateExtent = d3.extent(data, d=> d["d3Date"] );
+      const dateScale = d3.scaleTime().domain(dateExtent).range([0, chartWidth] );
+      const dateScale2 = d3.scaleBand().domain(dateExtent).range([0, chartWidth] )
+                                      .padding(0.05);
+
+      //color scale
+      const minMax = d3.extent(data, d => d["highLow"])
+      const colorScale = d3.scaleSequential(d3.interpolateRdBu).domain(minMax);
 
       let leftAxis = d3.axisLeft(volumeScale)
                         .tickFormat(d3.format("~s"));
@@ -59,6 +66,10 @@
       let leftGridlines = d3.axisLeft(volumeScale)
                             .tickSize(-chartWidth)
                             .tickFormat("")
+
+      //Scale for GME opening/closing comparision
+      //function lowHigh() {if () }
+
       //Y Left Axis
       annotations.append("g")
            .attr("class", "y gridlines")
@@ -71,13 +82,14 @@
                 .attr("transform", "translate("+margins.left+", "+margins.top+" )" )
                 .call(leftAxis)
 
-      //build bars
-      data.forEach( (d, i) =>{
-        let bar = barChart.append("line")
-                          .attr("x1", volumeScale( d.volNum))
-                          .attr("x2", volumeScale( d.volNum))
-
-      })
+      //add bars
+      barChart.selectAll("rect.bar").data(data)
+                                .join("rect").attr("class", "bar")
+                                .attr("fill", d => colorScale(d.highLow))
+                                .attr("x", d => dateScale(d.d3Date))
+                                .attr("y", d => volumeScale(d.volNum))
+                                .attr("height", d => volumeScale(d.volNum))
+                                //.attr("width", dateScale2.bandwidth());
 
     })
 
@@ -130,6 +142,8 @@
       //Y Right axis
       let yRightAxis = d3.axisRight(chatterScale)
                           .tickFormat(d3.format("d"))
+
+
 
       annotations.append("g")
                   .attr("class", "yRightAxis")
