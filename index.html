@@ -51,9 +51,11 @@
       const volumeScale = d3.scaleLog().domain(volumeExtent).range([chartHeight, 0]);
 
       //date scales for bar chart based off 21.03.15 lecture notes (genreScale)
-      const dateExtent = d3.extent(data, d=> d["d3Date"] );
-      const dateScale = d3.scaleTime().domain(dateExtent).range([0, chartWidth] );
-      const dateScale2 = d3.scaleBand().domain(dateExtent).range([0, chartWidth] )
+      const dates = d3.map(data, d => d.d3Date)
+      //const dateExtent = d3.extent(data, d=> d["d3Date"] );
+
+      //const dateScale = d3.scaleTime().domain(dateExtent).range([0, chartWidth] );
+      const dateScale = d3.scaleBand().domain(dates).range([0, chartWidth] )
                                       .padding(0.05);
 
       //color scale
@@ -67,9 +69,6 @@
                             .tickSize(-chartWidth)
                             .tickFormat("")
 
-      //Scale for GME opening/closing comparision
-      //function lowHigh() {if () }
-
       //Y Left Axis
       annotations.append("g")
            .attr("class", "y gridlines")
@@ -81,15 +80,19 @@
                 .attr("class", "yLeftaxis")
                 .attr("transform", "translate("+margins.left+", "+margins.top+" )" )
                 .call(leftAxis)
-
+      console.log("volumeScale")
+      data.forEach( (d, i) => {
+        console.log(volumeScale(10000))
+        //console.log(volumeScale(d.volNum))
+      })
       //add bars
       barChart.selectAll("rect.bar").data(data)
                                 .join("rect").attr("class", "bar")
                                 .attr("fill", d => colorScale(d.highLow))
                                 .attr("x", d => dateScale(d.d3Date))
                                 .attr("y", d => volumeScale(d.volNum))
-                                .attr("height", d => volumeScale(d.volNum))
-                                //.attr("width", dateScale2.bandwidth());
+                                .attr("height", d => height-margins.bottom-volumeScale(d.volNum))
+                                .attr("width", dateScale.bandwidth());
 
     })
 
@@ -136,7 +139,7 @@
 
       annotations.append("g")
                   .attr("class", "x axis")
-                  .attr("transform", "translate("+margins.left+", "+(chartHeight+margins.top)+")")
+                  .attr("transform", "translate("+margins.left+", "+(chartHeight+margins.top+10)+")")
                   .call(bottomAxis);
 
       //Y Right axis
