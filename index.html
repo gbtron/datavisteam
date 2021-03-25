@@ -18,7 +18,7 @@
     const svg = d3.select("svg#barchart");
     const width = svg.attr("width");
     const height = svg.attr("height");
-    const margins = {"top":0, "right":40, "bottom":40, "left":40};
+    const margins = {"top":10, "right":40, "bottom":40, "left":40};
     const chartWidth = width - margins.left - margins.right;
     const chartHeight = height - margins.top - margins.bottom;
 
@@ -29,8 +29,6 @@
 
     //for GME Stock Data
     d3.csv("GME_Stock_Data.csv").then( (data) =>{
-      console.log("stock volume: ")
-      console.log(data);
       const timeParser =d3.timeParse('%Y-%m-%d')
       //filter data
       data.forEach( (d, i) => {
@@ -45,18 +43,74 @@
       })
       //filter out dates before 01/28
       data = data.filter( (d) => {return d["dateNum"] > 20210127; } );
+      console.log("stock volume: ")
+      console.log(data);
+
+  //ADD WEEKEND values
+  //based off code from https://github.com/d3/d3-time-format
+
+  //Simple way ~
+
+  //Once new entries are pushed to dataset array, they appear as empty bars
+  //at the far right of the graph. The date scale does not recognize that they
+  //fit within the existing bars and should be in their intended date. Seems like a quick fix.
+
+      // var parseTime = d3.timeParse("%j, %Y %Z")
+
+      // data.push( {"d3Date": parseTime("030, 2021 -0400"), "volNum": 0} )
+      // data.push( {"d3Date": parseTime("031, 2021 -0400"), "volNum": 0} )
+      // data.push( {"d3Date": parseTime("037, 2021 -0400"), "volNum": 0} )
+      // data.push( {"d3Date": parseTime("038, 2021 -0400"), "volNum": 0} )
+      // data.push( {"d3Date": parseTime("044, 2021 -0400"), "volNum": 0} )
+      // data.push( {"d3Date": parseTime("045, 2021 -0400"), "volNum": 0} )
+      // data.push( {"d3Date": parseTime("046, 2021 -0400"), "volNum": 0} )
+      // data.push( {"d3Date": parseTime("051, 2021 -0400"), "volNum": 0} )
+      // data.push( {"d3Date": parseTime("052, 2021 -0400"), "volNum": 0} )
+      // data.push( {"d3Date": parseTime("058, 2021 -0400"), "volNum": 0} )
+      // data.push( {"d3Date": parseTime("059, 2021 -0400"), "volNum": 0} )
+      // data.push( {"d3Date": parseTime("065, 2021 -0400"), "volNum": 0} )
+      // data.push( {"d3Date": parseTime("066, 2021 -0400"), "volNum": 0} )
+      // data.push( {"d3Date": parseTime("072, 2021 -0400"), "volNum": 0} )
+      // data.push( {"d3Date": parseTime("073, 2021 -0400"), "volNum": 0} )
+
+      // console.log("added dates:")
+      // console.log(data);
+
+//Ambitious way ~
+
+//I thought it was worth a shot.
+
+      // for (var i = 0; i < data.length-1; i++) {
+      //
+      //     const lowCounter = data[i]['d3Date'];
+      //     const hiCounter = data[i+1]['d3Date'];
+
+      //     const formatDay = d3.timeFormat("%j")
+      //     console.log(formatDay(lowCounter));
+      //     //console.log(Number(formatDay(hiCounter)) - Number(formatDay(lowCounter)));
+      //     const daysMissing = Number(formatDay(hiCounter)) - Number(formatDay(lowCounter));
+      //     //console.log(daysMissing);
+      //     if ( daysMissing >1) {
+      //
+      //         data.push( { "Date": d3.timeParse("%j")(new Date), "Volume": 0 } )
+      //
+      //     }
+      //     console.log("post date adds")
+      //     console.log(data);
+      //     //if (counter)
+      // }
 
       //build Scales
       const volumeExtent = d3.extent(data, d => d["volNum"] );
-      const volumeScale = d3.scaleLog().domain(volumeExtent).range([chartHeight, 0]);
+      const volumeScale = d3.scaleLinear().domain(volumeExtent).range([chartHeight, 0]);
 
       //date scales for bar chart based off 21.03.15 lecture notes (genreScale)
       const dates = d3.map(data, d => d.d3Date)
       //const dateExtent = d3.extent(data, d=> d["d3Date"] );
 
-      //const dateScale = d3.scaleTime().domain(dateExtent).range([0, chartWidth] );
+      const dateScale1 = d3.scaleTime().domain(dates).range([0, chartWidth] );
       const dateScale = d3.scaleBand().domain(dates).range([0, chartWidth] )
-                                      .padding(0.05);
+                                      .padding(0.0);
 
       //color scale
       const minMax = d3.extent(data, d => d["highLow"])
@@ -80,9 +134,9 @@
                 .attr("class", "yLeftaxis")
                 .attr("transform", "translate("+margins.left+", "+margins.top+" )" )
                 .call(leftAxis)
-      console.log("volumeScale")
+      //console.log("volumeScale")
       data.forEach( (d, i) => {
-        console.log(volumeScale(10000))
+        //console.log(volumeScale(10000))
         //console.log(volumeScale(d.volNum))
       })
       //add bars
@@ -91,7 +145,7 @@
                                 .attr("fill", d => colorScale(d.highLow))
                                 .attr("x", d => dateScale(d.d3Date))
                                 .attr("y", d => volumeScale(d.volNum))
-                                .attr("height", d => height-margins.bottom-volumeScale(d.volNum))
+                                .attr("height", d => height-margins.bottom-10-volumeScale(d.volNum))
                                 .attr("width", dateScale.bandwidth());
 
     })
@@ -108,10 +162,6 @@
           d['d3Date'] = timeParser(d["date"])
 
       })
-      //filter out the data points that include weekends
-      // for (i=0; i<data.length; i++){
-      //
-      // }
 
       //filter out 01/27
       data = data.filter( (d) => {return d["mentionsNum"] > 0; } );
@@ -146,13 +196,18 @@
       let yRightAxis = d3.axisRight(chatterScale)
                           .tickFormat(d3.format("d"))
 
-
-
       annotations.append("g")
                   .attr("class", "yRightAxis")
                   .attr("transform", "translate("+(chartWidth+margins.left)+", "+margins.top+") ")
                   .call(yRightAxis);
 
+      //draw circles; connect with lines
+      barChart.selectAll("circle").data(data)
+                        .join("circle").attr("class", "points")
+                        .attr("cx", d => dateScale(d.d3Date) )
+                        .attr("cy", d => chatterScale(d.mentionsNum ) )
+                        .attr("r", 3)
+                        .attr("fill", "darkpurple");
     })
 
 
