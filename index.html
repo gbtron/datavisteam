@@ -3,7 +3,7 @@
     <!-- Contributors to this project include
           Joseph Fuentes jrf268 Joanna Saikali js3548 Sawyer Hwang  -->
 
-    <title> Project 1 </title>
+    <title>Project 1</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
 
   </head>
@@ -11,14 +11,14 @@
   <body>
     <h3 style="color:darkblue; font-family:Arial;"> WallStreetBets Gamestop chatter versus GME trading value </h3>
 
-    <svg id= "barchart" width="800" height="600" style="border: 1px solid black"> </svg>
+    <svg id= "barchart" width="1000" height="750" style="border: 1px solid black"> </svg>
 
     <script>
 
     const svg = d3.select("svg#barchart");
     const width = svg.attr("width");
     const height = svg.attr("height");
-    const margins = {"top":10, "right":40, "bottom":40, "left":40};
+    const margins = {"top":20, "right":60, "bottom":60, "left":60};
     const chartWidth = width - margins.left - margins.right;
     const chartHeight = height - margins.top - margins.bottom;
 
@@ -28,21 +28,23 @@
                     .attr("transform","translate("+margins.left+","+margins.top+")");
 
     //for GME Stock Data
-    d3.csv("GME_Stock_Data.csv").then( (data) =>{
-      const timeParser =d3.timeParse('%Y-%m-%d')
+    d3.csv("GME_Stock_Data_new2.csv").then( (data) =>{
+      const timeParser = d3.timeParse('%m/%d/%Y')
       //filter data
       data.forEach( (d, i) => {
 
           d["volNum"] = Number(d['Volume']);
           d["openNum"] = Number(d["Open"]);
           d["closeNum"] = Number(d["Close"]);
-          d["dateNum"] = Number(d["Date"].replace(/-/g,""));
+          d["dateNum"] = Number(d["Date"].replace(/\//g,""));
+          d["Close"] = Number(d["Close"]);
           d['d3Date'] = timeParser(d["Date"]);
-          d["highLow"] = d["openNum"]-d["closeNum"];
+          d["highLow"] = d["closeNum"]-d["openNum"];
 
       })
       //filter out dates before 01/28
-      data = data.filter( (d) => {return d["dateNum"] > 20210127; } );
+
+     //data = data.filter( (d) => {return d["dateNum"] > 272021; } );
       console.log("stock volume: ")
       console.log(data);
 
@@ -56,8 +58,11 @@
   //fit within the existing bars and should be in their intended date. Seems like a quick fix.
 
       // var parseTime = d3.timeParse("%j, %Y %Z")
-
+      //
       // data.push( {"d3Date": parseTime("030, 2021 -0400"), "volNum": 0} )
+      // Number("2/13/2021".replace(/\//g,""))
+      // data.push( {"d3Date": parseTime("030, 2021 -0400"), "volNum": 0} )
+      //
       // data.push( {"d3Date": parseTime("031, 2021 -0400"), "volNum": 0} )
       // data.push( {"d3Date": parseTime("037, 2021 -0400"), "volNum": 0} )
       // data.push( {"d3Date": parseTime("038, 2021 -0400"), "volNum": 0} )
@@ -84,7 +89,7 @@
       //
       //     const lowCounter = data[i]['d3Date'];
       //     const hiCounter = data[i+1]['d3Date'];
-
+      //
       //     const formatDay = d3.timeFormat("%j")
       //     console.log(formatDay(lowCounter));
       //     //console.log(Number(formatDay(hiCounter)) - Number(formatDay(lowCounter)));
@@ -102,7 +107,7 @@
 
       //build Scales
       const volumeExtent = d3.extent(data, d => d["volNum"] );
-      const volumeScale = d3.scaleLinear().domain(volumeExtent).range([chartHeight, 0]);
+      const volumeScale = d3.scaleLinear().domain([0,volumeExtent[1]]).range([chartHeight, 0]);
 
       //date scales for bar chart based off 21.03.15 lecture notes (genreScale)
       const dates = d3.map(data, d => d.d3Date)
@@ -114,7 +119,7 @@
 
       //color scale
       const minMax = d3.extent(data, d => d["highLow"])
-      const colorScale = d3.scaleSequential(d3.interpolateRdBu).domain(minMax);
+      const colorScale = d3.scaleSequential(d3.interpolateRdBu).domain(minMax );
 
       let leftAxis = d3.axisLeft(volumeScale)
                         .tickFormat(d3.format("~s"));
@@ -145,16 +150,20 @@
                                 .attr("fill", d => colorScale(d.highLow))
                                 .attr("x", d => dateScale(d.d3Date))
                                 .attr("y", d => volumeScale(d.volNum))
-                                .attr("height", d => height-margins.bottom-10-volumeScale(d.volNum))
+                                .attr("height", d => height-margins.bottom-20-volumeScale(d.volNum))
                                 .attr("width", dateScale.bandwidth());
 
     })
 
-    d3.csv("WSB_gamestop_mentions.csv").then( (data) =>{
+
+
+
+
+    d3.csv("WSB_gamestop_mentions_new2.csv").then( (data) =>{
       console.log("chatter: ");
       console.log(data);
 
-      const timeParser =d3.timeParse('%Y-%m-%d')
+      const timeParser = d3.timeParse('%m/%d/%Y')
 
       data.forEach( (d,i) =>{
 
@@ -164,23 +173,26 @@
       })
 
       //filter out 01/27
-      data = data.filter( (d) => {return d["mentionsNum"] > 0; } );
+      data = data.filter( (d) => {return d["mentionsNum"] != "0"; } );
       console.log(data);
 
       //build Scales
       const chatterExtent = d3.extent(data, d => d["mentionsNum"] );
-      const chatterScale = d3.scaleLog().domain(chatterExtent).range([chartHeight, 0] );
+      const chatterScale = d3.scaleLinear().domain([0,chatterExtent[1]]).range([chartHeight, 0] );
 
+      console.log(chatterExtent)
+      console.log([0,chatterExtent[1]])
       const dateExtent = d3.extent(data, d=> d["d3Date"] );
-      const dateScale = d3.scaleTime().domain(dateExtent).range([0, chartWidth] );
+      const dateScale = d3.scaleTime().domain(dateExtent).range([11, chartWidth-11] );
 
       //X axis
       let bottomAxis = d3.axisBottom(dateScale)
-                          .tickFormat(d3.timeFormat("%a %b %d"))
+                          .tickFormat(d3.timeFormat("%b %d"))
 
       let bottomGridlines = d3.axisBottom(dateScale)
                               .tickSize(-chartHeight)
                               .tickFormat("")
+
       annotations.append("g")
                   .attr("class", "x gridlines")
                   .attr("transform", "translate("+margins.left+", "+(chartHeight+margins.top)+")")
@@ -189,26 +201,75 @@
 
       annotations.append("g")
                   .attr("class", "x axis")
-                  .attr("transform", "translate("+margins.left+", "+(chartHeight+margins.top+10)+")")
+                  .attr("transform", "translate("+margins.left+", "+(chartHeight+margins.top)+")")
                   .call(bottomAxis);
 
       //Y Right axis
       let yRightAxis = d3.axisRight(chatterScale)
-                          .tickFormat(d3.format("d"))
+
+
+                         // .tickFormat(d3.format("d"))
+
+      let rightGridlines = d3.axisLeft(chatterScale)
+                            .tickSize(0)
+                            .tickFormat("")
+
 
       annotations.append("g")
                   .attr("class", "yRightAxis")
                   .attr("transform", "translate("+(chartWidth+margins.left)+", "+margins.top+") ")
                   .call(yRightAxis);
 
+      annotations.append("g")
+                  .attr("class", "y gridlines")
+                  .attr("transform", "translate("+(chartWidth+margins.left)+", "+margins.top+") ")
+                  .attr("color", "lightgrey")
+                  .call(rightGridlines);
+
       //draw circles; connect with lines
+
       barChart.selectAll("circle").data(data)
                         .join("circle").attr("class", "points")
                         .attr("cx", d => dateScale(d.d3Date) )
-                        .attr("cy", d => chatterScale(d.mentionsNum ) )
+                        .attr("cy", d => chatterScale(d.mentionsNum) )
                         .attr("r", 3)
                         .attr("fill", "darkpurple");
+
+
+      var lineGen = d3.line()
+        .x( d => dateScale(d.d3Date)  )
+        .y( d => chatterScale(d.mentionsNum) )
+        .curve(d3.curveMonotoneX);
+
+      barChart.append("path")
+       .datum(data)
+       .attr("class", "line")
+       .attr("fill", "none")
+       .attr("stroke", "steelblue")
+       .attr("stroke-width", 3)
+       .attr("d", lineGen);
     })
+
+    barChart.append("text")
+      .attr("class", "x label")
+      .attr("x", chartWidth/2-margins.left)
+      .attr("y", chartHeight+margins.top+20)
+      .text("Dates");
+
+    barChart.append("text")
+      .attr("class", "y label")
+      .attr("x", -chartHeight/2-margins.top-80)
+      .attr("y", -40)
+      .attr("transform", "rotate(270)")
+      .text("GME Stock Volume");
+
+    barChart.append("text")
+      .attr("class", "y label")
+      .attr("x", chartHeight/2-100-margins.top)
+      .attr("y", -chartWidth-30)
+      .attr("transform", "rotate(90)")
+      .text("WallStreetBets Gamestop Chatter");
+
 
 
     </script>
