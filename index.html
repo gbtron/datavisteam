@@ -18,7 +18,7 @@
   <body>
     <h2 style="color:darkblue; font-family:Arial;"> WallStreetBets GameStop Chatter vs. GME Trading Volume </h2>
 
-    <svg id= "barchart" width="1180" height="750" style="border: 1px solid black"> </svg> <br>
+    <svg id= "barchart" width="1040" height="750" style="border: 1px solid black"> </svg> <br>
     
     <p>
       <span class="cardSpan">
@@ -58,7 +58,7 @@
                     .attr("transform","translate("+margins.left+","+margins.top+")");
 
     //for GME Stock Data
-    d3.csv("data/GME_stock_new4.csv").then( (data) =>{
+    d3.csv("data/GME_stock_new.csv").then( (data) =>{
       const timeParser = d3.timeParse('%m/%d/%Y')
       //filter data
       data.forEach( (d, i) => {
@@ -87,7 +87,7 @@
       //const dateExtent = d3.extent(data, d=> d["d3Date"] );
 
       const dateGridlineExtent = d3.extent([timeParser("2/14/2021"), timeParser("3/21/2021")])
-      const dateScaleGridlines = d3.scaleTime().domain(dateGridlineExtent).range([148, chartWidth-102] );
+      const dateScaleGridlines = d3.scaleTime().domain(dateGridlineExtent).range([130, chartWidth-90] );
       const dateScaleGME = d3.scaleBand().domain(dates).range([0, chartWidth] )
                                       .padding(0.0);
 
@@ -137,7 +137,7 @@
     })
 
 
-    d3.csv("data/reddit_wsb_new3.csv").then( (data) =>{
+    d3.csv("data/reddit_wsb_new.csv").then( (data) =>{
       console.log("chatter: ");
       console.log(data);
 
