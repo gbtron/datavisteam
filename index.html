@@ -6,12 +6,42 @@
     <title>Project 1</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
 
+    <style>
+      .icon,
+      .text {
+        vertical-align: middle;
+        display: inline-block;
+      }
+    </style>
   </head>
 
   <body>
-    <h3 style="color:darkblue; font-family:Arial;"> WallStreetBets Gamestop chatter versus GME trading value </h3>
+    <h2 style="color:darkblue; font-family:Arial;"> WallStreetBets GameStop Chatter vs. GME Trading Volume </h2>
 
-    <svg id= "barchart" width="1000" height="750" style="border: 1px solid black"> </svg>
+    <svg id= "barchart" width="1180" height="750" style="border: 1px solid black"> </svg> <br>
+    
+    <p>
+      <span class="cardSpan">
+        <span class="icon">
+          <svg id="colorLegend" height="50" width="200" style="background: #fff;" > </svg> 
+        </span>
+        <text dominant-baseline="middle" text-anchor="middle" style="font-family:Arial; font-size: 20px"> GME Trading Volume 
+          <text style="font-family:Arial; font-size: 15px; color:black"> ( </text>
+          <text style="font-family:Arial; font-size: 15px; color:darkred"> stock price down </text> 
+          <text style="font-family:Arial; font-size: 15px; color:black"> / </text>
+          <text style="font-family:Arial; font-size: 15px; color:darkblue"> stock price up </text>
+          <text style="font-family:Arial; font-size: 15px; color:black"> ) </text>
+        </text> 
+        <svg width="80" height="50" style="margin-left: 100px">
+          <circle id="circle0" cx="5" cy="40" r="5" fill="#eba434"></circle>
+          <circle id="circle1" cx="70" cy="40" r="5" fill="#eba434"></circle>
+          <line id="line0" x1="5" y1="40" x2="70" y2="40" stroke="#eba434" stroke-width=3px />
+        </svg>
+        <text dominant-baseline="middle" text-anchor="middle" style="font-family:Arial; font-size: 20px"> WallStreetBets Chatter 
+        </text> 
+      
+      </span>
+    </p>
 
     <script>
 
@@ -28,7 +58,7 @@
                     .attr("transform","translate("+margins.left+","+margins.top+")");
 
     //for GME Stock Data
-    d3.csv("GME_Stock_Data_new2.csv").then( (data) =>{
+    d3.csv("data/GME_stock_new4.csv").then( (data) =>{
       const timeParser = d3.timeParse('%m/%d/%Y')
       //filter data
       data.forEach( (d, i) => {
@@ -48,79 +78,24 @@
       console.log("stock volume: ")
       console.log(data);
 
-  //ADD WEEKEND values
-  //based off code from https://github.com/d3/d3-time-format
-
-  //Simple way ~
-
-  //Once new entries are pushed to dataset array, they appear as empty bars
-  //at the far right of the graph. The date scale does not recognize that they
-  //fit within the existing bars and should be in their intended date. Seems like a quick fix.
-
-      // var parseTime = d3.timeParse("%j, %Y %Z")
-      //
-      // data.push( {"d3Date": parseTime("030, 2021 -0400"), "volNum": 0} )
-      // Number("2/13/2021".replace(/\//g,""))
-      // data.push( {"d3Date": parseTime("030, 2021 -0400"), "volNum": 0} )
-      //
-      // data.push( {"d3Date": parseTime("031, 2021 -0400"), "volNum": 0} )
-      // data.push( {"d3Date": parseTime("037, 2021 -0400"), "volNum": 0} )
-      // data.push( {"d3Date": parseTime("038, 2021 -0400"), "volNum": 0} )
-      // data.push( {"d3Date": parseTime("044, 2021 -0400"), "volNum": 0} )
-      // data.push( {"d3Date": parseTime("045, 2021 -0400"), "volNum": 0} )
-      // data.push( {"d3Date": parseTime("046, 2021 -0400"), "volNum": 0} )
-      // data.push( {"d3Date": parseTime("051, 2021 -0400"), "volNum": 0} )
-      // data.push( {"d3Date": parseTime("052, 2021 -0400"), "volNum": 0} )
-      // data.push( {"d3Date": parseTime("058, 2021 -0400"), "volNum": 0} )
-      // data.push( {"d3Date": parseTime("059, 2021 -0400"), "volNum": 0} )
-      // data.push( {"d3Date": parseTime("065, 2021 -0400"), "volNum": 0} )
-      // data.push( {"d3Date": parseTime("066, 2021 -0400"), "volNum": 0} )
-      // data.push( {"d3Date": parseTime("072, 2021 -0400"), "volNum": 0} )
-      // data.push( {"d3Date": parseTime("073, 2021 -0400"), "volNum": 0} )
-
-      // console.log("added dates:")
-      // console.log(data);
-
-//Ambitious way ~
-
-//I thought it was worth a shot.
-
-      // for (var i = 0; i < data.length-1; i++) {
-      //
-      //     const lowCounter = data[i]['d3Date'];
-      //     const hiCounter = data[i+1]['d3Date'];
-      //
-      //     const formatDay = d3.timeFormat("%j")
-      //     console.log(formatDay(lowCounter));
-      //     //console.log(Number(formatDay(hiCounter)) - Number(formatDay(lowCounter)));
-      //     const daysMissing = Number(formatDay(hiCounter)) - Number(formatDay(lowCounter));
-      //     //console.log(daysMissing);
-      //     if ( daysMissing >1) {
-      //
-      //         data.push( { "Date": d3.timeParse("%j")(new Date), "Volume": 0 } )
-      //
-      //     }
-      //     console.log("post date adds")
-      //     console.log(data);
-      //     //if (counter)
-      // }
-
       //build Scales
       const volumeExtent = d3.extent(data, d => d["volNum"] );
-      const volumeScale = d3.scaleLinear().domain([0,volumeExtent[1]]).range([chartHeight, 0]);
+      const volumeScale = d3.scaleLog().domain([5000000,200000000]).range([chartHeight, 0]);
 
       //date scales for bar chart based off 21.03.15 lecture notes (genreScale)
       const dates = d3.map(data, d => d.d3Date)
       //const dateExtent = d3.extent(data, d=> d["d3Date"] );
 
-      const dateScale1 = d3.scaleTime().domain(dates).range([0, chartWidth] );
-      const dateScale = d3.scaleBand().domain(dates).range([0, chartWidth] )
+      const dateGridlineExtent = d3.extent([timeParser("2/14/2021"), timeParser("3/21/2021")])
+      const dateScaleGridlines = d3.scaleTime().domain(dateGridlineExtent).range([148, chartWidth-102] );
+      const dateScaleGME = d3.scaleBand().domain(dates).range([0, chartWidth] )
                                       .padding(0.0);
 
       //color scale
       const minMax = d3.extent(data, d => d["highLow"])
-      const colorScale = d3.scaleSequential(d3.interpolateRdBu).domain(minMax );
+      const colorScale = d3.scaleSequential(d3.interpolateRdBu).domain(minMax);
 
+      drawLegend(d3.select("#colorLegend"), colorScale);
       let leftAxis = d3.axisLeft(volumeScale)
                         .tickFormat(d3.format("~s"));
 
@@ -135,31 +110,34 @@
            .attr("color","lightgrey")
            .call(leftGridlines);
 
+      let bottomGridlines = d3.axisBottom(dateScaleGridlines)
+                              .tickSize(-chartHeight)
+                              .tickFormat("")
+      annotations.append("g")
+                  .attr("class", "x gridlines")
+                  .attr("transform", "translate("+margins.left+", "+(chartHeight+margins.top)+")")
+                  .attr("color", "lightgrey")
+                  .call(bottomGridlines.ticks(6));
+
       annotations.append("g")
                 .attr("class", "yLeftaxis")
                 .attr("transform", "translate("+margins.left+", "+margins.top+" )" )
                 .call(leftAxis)
-      //console.log("volumeScale")
-      data.forEach( (d, i) => {
-        //console.log(volumeScale(10000))
-        //console.log(volumeScale(d.volNum))
-      })
+
       //add bars
       barChart.selectAll("rect.bar").data(data)
                                 .join("rect").attr("class", "bar")
                                 .attr("fill", d => colorScale(d.highLow))
-                                .attr("x", d => dateScale(d.d3Date))
+                                .attr("x", d => dateScaleGME(d.d3Date))
                                 .attr("y", d => volumeScale(d.volNum))
                                 .attr("height", d => height-margins.bottom-20-volumeScale(d.volNum))
-                                .attr("width", dateScale.bandwidth());
+                                .attr("width", dateScaleGME.bandwidth())
+                                .attr("border", 1).attr("stroke","grey");
 
     })
 
 
-
-
-
-    d3.csv("WSB_gamestop_mentions_new2.csv").then( (data) =>{
+    d3.csv("data/reddit_wsb_new3.csv").then( (data) =>{
       console.log("chatter: ");
       console.log(data);
 
@@ -178,26 +156,16 @@
 
       //build Scales
       const chatterExtent = d3.extent(data, d => d["mentionsNum"] );
-      const chatterScale = d3.scaleLinear().domain([0,chatterExtent[1]]).range([chartHeight, 0] );
+      const chatterScale = d3.scaleLog().domain([5,200]).range([chartHeight, 0] );
 
       console.log(chatterExtent)
       console.log([0,chatterExtent[1]])
       const dateExtent = d3.extent(data, d=> d["d3Date"] );
-      const dateScale = d3.scaleTime().domain(dateExtent).range([11, chartWidth-11] );
+      const dateScaleWSB = d3.scaleTime().domain(dateExtent).range([10, chartWidth-10] );
 
       //X axis
-      let bottomAxis = d3.axisBottom(dateScale)
-                          .tickFormat(d3.timeFormat("%b %d"))
-
-      let bottomGridlines = d3.axisBottom(dateScale)
-                              .tickSize(-chartHeight)
-                              .tickFormat("")
-
-      annotations.append("g")
-                  .attr("class", "x gridlines")
-                  .attr("transform", "translate("+margins.left+", "+(chartHeight+margins.top)+")")
-                  .attr("color", "lightgrey")
-                  .call(bottomGridlines);
+      let bottomAxis = d3.axisBottom(dateScaleWSB)
+                          .tickFormat(d3.timeFormat("%a %b %d"))
 
       annotations.append("g")
                   .attr("class", "x axis")
@@ -205,10 +173,7 @@
                   .call(bottomAxis);
 
       //Y Right axis
-      let yRightAxis = d3.axisRight(chatterScale)
-
-
-                         // .tickFormat(d3.format("d"))
+      let yRightAxis = d3.axisRight(chatterScale).tickFormat(d3.format("d"))
 
       let rightGridlines = d3.axisLeft(chatterScale)
                             .tickSize(0)
@@ -227,17 +192,16 @@
                   .call(rightGridlines);
 
       //draw circles; connect with lines
-
       barChart.selectAll("circle").data(data)
                         .join("circle").attr("class", "points")
-                        .attr("cx", d => dateScale(d.d3Date) )
+                        .attr("cx", d => dateScaleWSB(d.d3Date) )
                         .attr("cy", d => chatterScale(d.mentionsNum) )
-                        .attr("r", 3)
-                        .attr("fill", "darkpurple");
-
+                        .attr("r", 4)
+                        .attr("fill", "#eba434");
+      d3.select("#circle").raise();
 
       var lineGen = d3.line()
-        .x( d => dateScale(d.d3Date)  )
+        .x( d => dateScaleWSB(d.d3Date)  )
         .y( d => chatterScale(d.mentionsNum) )
         .curve(d3.curveMonotoneX);
 
@@ -245,9 +209,9 @@
        .datum(data)
        .attr("class", "line")
        .attr("fill", "none")
-       .attr("stroke", "steelblue")
+       .attr("stroke", "#eba434")
        .attr("stroke-width", 3)
-       .attr("d", lineGen);
+       .attr("d", lineGen) //
     })
 
     barChart.append("text")
@@ -261,7 +225,7 @@
       .attr("x", -chartHeight/2-margins.top-80)
       .attr("y", -40)
       .attr("transform", "rotate(270)")
-      .text("GME Stock Volume");
+      .text("GME Trading Volume");
 
     barChart.append("text")
       .attr("class", "y label")
@@ -270,6 +234,36 @@
       .attr("transform", "rotate(90)")
       .text("WallStreetBets Gamestop Chatter");
 
+    function drawLegend(legend, legendColorScale) {
+      
+      const legendWidth = legend.attr("width");
+      const legendHeight = legend.attr("height");
+      const legendMinMax = d3.extent(legendColorScale.domain()); 
+      const barHeight = 20;
+      const stepSize = 5; 
+      const pixelScale = d3.scaleLinear().domain([0,legendWidth-40]).range([legendMinMax[0],legendMinMax[1]]);
+      const barScale = d3.scaleLinear().domain([legendMinMax[0],legendMinMax[1]]).range([0,legendWidth-40]);
+      const barAxis = d3.axisBottom(barScale);
+      if (legendColorScale.hasOwnProperty('quantiles')) {
+        barAxis.tickValues(legendColorScale.quantiles().concat( legendMinMax ));
+      }
+      legend.append("g")
+        .attr("class", "colorbar axis")
+        .attr("transform","translate("+(20)+","+(barHeight+5)+")")
+        .call(barAxis.ticks(4));
+      let bar = legend.append("g").attr("transform","translate("+(20)+","+(0)+")")
+      for (let i=0; i<legendWidth-40; i=i+stepSize) {
+        bar.append("rect")
+          .attr("x", i)
+          .attr("y", 0)
+          .attr("width", stepSize)
+          .attr("height",barHeight)
+          .style("fill", legendColorScale( pixelScale(i) )); 
+      }
+      bar.append("line").attr("stroke","white").attr("stroke-width",3).attr("x1", barScale(legendMinMax[0])).attr("x2", barScale(legendMinMax[0])).attr("y1", 0).attr("y1", barHeight+4);
+      bar.append("line").attr("stroke","white").attr("stroke-width",3).attr("x1", barScale(legendMinMax[1])).attr("x2", barScale(legendMinMax[1])).attr("y1", 0).attr("y1", barHeight+4);
+      
+    }
 
 
     </script>
