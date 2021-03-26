@@ -59,7 +59,7 @@
 
     //for GME Stock Data
     d3.csv("data/GME_stock_new.csv").then( (data) =>{
-      const timeParser = d3.timeParse('%m/%d/%Y')
+      const timeParser = d3.timeParse('%Y-%m-%d')
       //filter data
       data.forEach( (d, i) => {
 
@@ -141,7 +141,7 @@
       console.log("chatter: ");
       console.log(data);
 
-      const timeParser = d3.timeParse('%m/%d/%Y')
+      const timeParser = d3.timeParse('%Y-%m-%d')
 
       data.forEach( (d,i) =>{
 
