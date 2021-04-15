@@ -6,6 +6,7 @@
     <title>Project 2</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="https://d3js.org/topojson.v2.min.js"></script>
+    <script src="https://unpkg.com/d3-simple-slider"></script>
     <style>
       .icon,
       .text {
@@ -41,6 +42,11 @@
         stroke: grey;
         stroke-width: 1px;
       }
+      .slider-wrapper {
+        width: 20px;
+        height: 150px;
+        padding: 0;
+      }
     </style>
   </head>
 
@@ -51,6 +57,9 @@
       <text id="label" x="43" y="12" text-anchor="start" alignment-baseline="hanging"></text>
     </svg> <br>
 
+  <div class="row align-items-center">
+    <div class="col-sm"><div id="slider-time"></div></div>
+  </div>
     <script>
 
     const svg = d3.select("svg#map");
@@ -61,7 +70,6 @@
     const mapHeight = height - margin.top - margin.bottom;
     const map = svg.append("g")
                     .attr("transform","translate("+margin.left+","+margin.top+")");
-                    
 
     const requestData = async function() {
       const hometownData = await d3.csv("data/hometowns.csv", d3.autotype);
@@ -73,6 +81,8 @@
       const stateIDs = await d3.tsv("data/us-state-names.tsv");
       const us = await d3.json("data/us-smaller.json");
 
+      const yearExtent = d3.extent(spotifyHits, d => d["Year"] )
+      const yearRange = d3.range(yearExtent[0],yearExtent[1])
 
       var states = topojson.feature(us, us.objects.states);
       var statesMesh = topojson.mesh(us, us.objects.states);
@@ -92,6 +102,9 @@
          .attr("class","outline")
          .attr("d", path);
 
+      // hard coding min and max so it's the same scale regardless of filter
+      const colorScale = d3.scaleSequentialLog(d3.interpolateBlues).domain([1,229]);
+
       let stateCounts = {}; 
       let idToState = {};
       let singerToState = {};
@@ -105,25 +118,55 @@
         idToState[row.id] = row.code;
       });
 
-      filteredHits = spotifyHits.filter( 
-          (d) => {return d["Year"] === "2013"; } )
+      function showMap(year){
+        // Setting StateCounts to 0s so we re-fill the colors
+        let setAll = (obj, val) => Object.keys(obj).forEach(k => obj[k] = val);
+        let setZero = obj => setAll(obj, 0);
+        setZero(stateCounts)
+
+        map.selectAll(".state").style("fill","white");
+
+        filteredHits = spotifyHits.filter( 
+          (d) => {return d["Year"] === year; } )
       
-      filteredHits.forEach( row => {
-        if (row.Performer in singerToState)
-          stateCounts[singerToState[row.Performer]] += 1;
-      });
-      console.log(stateCounts)
+        filteredHits.forEach( row => {
+          if (row.Performer in singerToState)
+            stateCounts[singerToState[row.Performer]] += 1;
+        });
+        console.log(stateCounts)
 
-      // const minMax = d3.extent(stateIDs, d => stateCounts[d.code]+1);
-      // console.log(minMax);
-      // hard coding min and max so it's the same scale regardless of filter
-      const colorScale = d3.scaleSequentialLog(d3.interpolateBlues).domain([1,229]);
+        map.selectAll(".state")
+         .style("fill", d => colorScale( stateCounts[ idToState[d.id] ]) );
 
-      map.selectAll(".state")
-       .style("fill", d => colorScale( stateCounts[ idToState[d.id] ]) );
+      }
+      showMap("2000")
 
+      // The following is adapted from above;
+      // https://bl.ocks.org/johnwalley/e1d256b81e51da68f7feb632a53c3518
+      var sliderTime = d3
+        .sliderBottom()
+        .min(2000)
+        .max(2020)
+        .step(1)
+        .width(300)
+        .tickFormat("")
+        .tickFormat(d3.format("~f"))
+        .ticks(5)
+        .default(2000)
+        .on('onchange', val => {
+          showMap(val.toString());
+        });
 
-  
+      var gTime = d3
+        .select('div#slider-time')
+        .append('svg')
+        .attr('width', 500)
+        .attr('height', 100)
+        .append('g')
+        .attr('transform', 'translate(30,30)');
+
+      gTime.call(sliderTime);
+      
     }
     requestData();
 
