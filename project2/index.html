@@ -1,9 +1,11 @@
+<!DOCTYPE html>
 <html>
   <head>
     <!-- Contributors to this project include
-          Joseph Fuentes jrf268 Joanna Saikali js3548 Sawyer Hwang  -->
+          Joseph Fuentes jrf268 Joanna Saikali js3548 Sawyer Huang  smh367-->
 
     <title>Project 2</title>
+    <meta charset="utf-8"/>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="https://d3js.org/topojson.v2.min.js"></script>
     <script src="https://unpkg.com/d3-simple-slider"></script>
@@ -19,8 +21,8 @@
       .gridlines .domain {
       stroke: none;
       }
-      .axis { 
-      font: 12px Arial; 
+      .axis {
+      font: 12px Arial;
       }
       .state {
         fill: lightgrey;
@@ -31,7 +33,7 @@
         stroke-width: 1px;
         fill: none;
       }
-      
+
       .mouseover {
         stroke-width: 3px;
         pointer-events: none;
@@ -53,7 +55,14 @@
   <body>
     <h2 style="color:darkblue; font-family:Arial;"> Singer hometowns per genre </h2>
 
-    <svg id= "map" width="1000" height="800" style="border: 1px solid black"> 
+
+    <p id="first"></p>
+    <p id="second"></p>
+    <p id="third"></p>
+    <p id="fourth"></p>
+    <p id="fifth"></p>
+
+    <svg id= "map" width="1000" height="800" style="border: 1px solid black">
       <text id="label" x="43" y="12" text-anchor="start" alignment-baseline="hanging"></text>
     </svg> <br>
 
@@ -61,6 +70,27 @@
     <div class="col-sm"><div id="slider-time"></div></div>
   </div>
     <script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     const svg = d3.select("svg#map");
     const width = svg.attr("width");
@@ -84,6 +114,20 @@
       const yearExtent = d3.extent(spotifyHits, d => d["Year"] )
       const yearRange = d3.range(yearExtent[0],yearExtent[1])
 
+
+      //COPIED from
+    //  var newArray = hometownData.filter(function (el) {
+    //    return el.price <= 1000 &&
+    //           el.sqft >= 500 &&
+    //           el.num_of_beds >=2 &&
+    //           el.num_of_baths >= 2.5;
+    //  });
+
+      //COPIED
+
+
+
+
       var states = topojson.feature(us, us.objects.states);
       var statesMesh = topojson.mesh(us, us.objects.states);
       var projection = d3.geoAlbersUsa().fitSize([mapWidth, mapHeight], states);
@@ -91,13 +135,13 @@
 
       var graticule = d3.geoGraticule10();
       map.append("path").attr("class","graticule").attr("d", path(graticule) )
-      
+
       map.selectAll("path.state").data(states.features)
          .join("path")
          .attr("class", "state")
          .attr("note", d => d.id)
          .attr("d", path);
-    
+
       map.append("path").datum(statesMesh)
          .attr("class","outline")
          .attr("d", path);
@@ -105,41 +149,120 @@
       // hard coding min and max so it's the same scale regardless of filter
       const colorScale = d3.scaleSequentialLog(d3.interpolateBlues).domain([1,229]);
 
-      let stateCounts = {}; 
+      let stateCounts = {};
       let idToState = {};
       let singerToState = {};
+      let singerToGenre = {};
 
       hometownData.forEach(row => {
         singerToState[row.Artist_Name] = row.State
       })
-    
+
       stateIDs.forEach( row => {
         stateCounts[row.code] = 0;
         idToState[row.id] = row.code;
       });
 
-      function showMap(year){
+
+
+      var genres = ["rap", "hip-hop", "reggaeton", "pop", "country", "latin", "brostep", "post-Grunge", "hollywood"];
+
+      function update(year) {
+
+      var choices = [];
+
+      d3.selectAll(".genres").each(function(d){
+        cb = d3.select(this);
+        if(cb.property("checked")){
+          choices.push(cb.property("value"));
+        }
+      });
+
+      if(choices.length > 0){
+        console.log(genres.filter(function(d,i){return choices.includes(d);}));
+        showMap(year, genres.filter(function(d,i){return choices.includes(d);}));
+      } else {
+        showMap(year, genres);
+      }
+      }
+
+
+
+
+
+      function showMap(year, gs){
         // Setting StateCounts to 0s so we re-fill the colors
         let setAll = (obj, val) => Object.keys(obj).forEach(k => obj[k] = val);
         let setZero = obj => setAll(obj, 0);
         setZero(stateCounts)
+        console.log("updated")
+
+
+
+
+
+
+
+
+
+
+
 
         map.selectAll(".state").style("fill","white");
 
-        filteredHits = spotifyHits.filter( 
+        filteredHits = spotifyHits.filter(
           (d) => {return d["Year"] === year; } )
-      
+
+
+        filteredFeatures = spotifyFeatures.filter(
+          (d) => {return gs.includes(d["genre_larger"]);});
+          console.log(gs)
+
+        filteredFeatures.forEach(row => {
+          singerToGenre[row.SongID] = row.genre_larger
+        })
+
         filteredHits.forEach( row => {
-          if (row.Performer in singerToState)
-            stateCounts[singerToState[row.Performer]] += 1;
+          if (row.Performer in singerToState) {
+            if (row.SongID in singerToGenre)
+              stateCounts[singerToState[row.Performer]] += 1;
+          }
         });
-        console.log(stateCounts)
 
         map.selectAll(".state")
          .style("fill", d => colorScale( stateCounts[ idToState[d.id] ]) );
+         console.log(stateCounts)
 
-      }
-      showMap("2000")
+
+//COPIED from https://gist.github.com/umidjons/9614157
+function sortProperties(obj)
+{
+// convert object into array
+var sortable=[];
+for(var key in obj)
+if(obj.hasOwnProperty(key))
+sortable.push([key, obj[key]]); // each item is an array in format [key, value]
+
+// sort items by value
+sortable.sort(function(a, b)
+{
+return b[1]-a[1]; // compare numbers
+});
+return sortable; // array in format [ [ key1, val1 ], [ key2, val2 ], ... ]
+}
+//COPIED
+
+            newcounts = sortProperties(stateCounts)
+            d3.select("p#first").text("1. "+ newcounts[0] )
+            d3.select("p#second").text("2. "+ newcounts[1] )
+            d3.select("p#third").text("3. "+ newcounts[2] )
+            d3.select("p#fourth").text("4. "+ newcounts[3] )
+            d3.select("p#fifth").text("5. "+ newcounts[4] )
+
+
+}
+
+update("2000")
 
       // The following is adapted from above;
       // https://bl.ocks.org/johnwalley/e1d256b81e51da68f7feb632a53c3518
@@ -154,7 +277,7 @@
         .ticks(5)
         .default(2000)
         .on('onchange', val => {
-          showMap(val.toString());
+          update(val.toString());
         });
 
       var gTime = d3
@@ -166,12 +289,139 @@
         .attr('transform', 'translate(30,30)');
 
       gTime.call(sliderTime);
-      
+
+
+      //d3.selectAll(".genres").on("change",update(sliderTime.value().toString()));
+      d3.selectAll("input.genres").on("change",function(d){
+        update("2000");});
+
+//      console.log(sliderTime.value().toString())
+
+
+
+
+
+
+
+
+
+
+
+
+      let tooltipWidth = 90;
+      let tooltipHeight = 30;
+
+
+      let tooltip = map.append("g")
+                     .attr("class","tooltip")
+                     .attr("visibility","hidden");
+    tooltip.append("rect")
+           .attr("fill", "lightgray")
+           .attr("opacity", 0.8)
+           .attr("x", -tooltipWidth / 2.0)
+           .attr("y", 0)
+           .attr("width",tooltipWidth)
+           .attr("height",tooltipHeight);
+
+    let txt = tooltip.append("text")
+                     .attr("fill", "black")
+                     .attr("text-anchor","middle")
+                     .attr("alignment-baseline","middle")
+                     .attr("x", -15)
+                     .attr("y", 15);
+    let txt2 = tooltip.append("text")
+                     .attr("fill", "black")
+                     .attr("text-anchor","middle")
+                     .attr("alignment-baseline","middle")
+                     .attr("x", 15)
+                     .attr("y", 15);
+
+      let momesh =  map.append("path")
+                     .attr("class","mouseover outline")
+                     .attr("d", "");
+
+    d3.selectAll(".state").on("mouseenter", mouseEntersPlot);
+    d3.selectAll(".state").on("mouseout",  mouseLeavesPlot);
+
+    function mouseEntersPlot() {
+
+      tooltip.style("visibility","visible")
+
+      let state = d3.select(this);
+      let stateID = state.datum().id;
+      console.log(state.datum())
+
+
+      var mo = topojson.mesh(us, us.objects.states, function(a, b) { return a.id === stateID || b.id === stateID; });
+
+      momesh.datum(mo).attr("d", path)
+
+
+      txt.text(idToState[ stateID ]);
+      txt2.text(stateCounts[ idToState[ stateID  ] ]);
+
+      let bounds = path.bounds( state.datum() );
+
+
+      let xPos = (bounds[0][0]+bounds[1][0])/2.0;
+      let yPos = bounds[1][1];
+
+      tooltip.attr("transform",`translate(${xPos},${yPos})`);
+
+    }
+
+    function mouseLeavesPlot() {
+
+     tooltip.style("visibility","hidden");
+
+     let state = d3.select(this);
+
+     momesh.attr("d", "");
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
     requestData();
 
 
+
+
+
     </script>
+
+    <div id="checkboxes">
+    <input type="checkbox" class="genres" value="rap"><label>Rap</label>
+    <input type="checkbox" class="genres" value="hip-hop"><label>Hip-Hop</label>
+    <input type="checkbox" class="genres" value="reggaeton"><label>Reggaeton</label>
+    <input type="checkbox" class="genres" value="pop"><label>Pop</label>
+    <input type="checkbox" class="genres" value="country"><label>Country</label>
+    <input type="checkbox" class="genres" value="latin"><label>Latin</label>
+    <input type="checkbox" class="genres" value="brostep"><label>Brostep</label>
+    <input type="checkbox" class="genres" value="hollywood"><label>Hollywood</label>
+    </div>
+
+
 
   </body>
 </html>
