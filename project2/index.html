@@ -195,6 +195,23 @@
         let setAll = (obj, val) => Object.keys(obj).forEach(k => obj[k] = val);
         let setZero = obj => setAll(obj, 0);
         setZero(stateCounts)
+
+
+        stateCounts = {};
+        idToState = {};
+        singerToState = {};
+        singerToGenre = {};
+
+        hometownData.forEach(row => {
+          singerToState[row.Artist_Name] = row.State
+        })
+
+        stateIDs.forEach( row => {
+          stateCounts[row.code] = 0;
+          idToState[row.id] = row.code;
+        });
+
+
         console.log("updated")
 
 
@@ -209,18 +226,22 @@
 
 
         map.selectAll(".state").style("fill","white");
+        console.log("white")
 
         filteredHits = spotifyHits.filter(
           (d) => {return d["Year"] === year; } )
 
 
         filteredFeatures = spotifyFeatures.filter(
-          (d) => {return gs.includes(d["genre_larger"]);});
+          (d) => {return gs.includes(d["genre_larger"]);});//d["genre_larger"]==="rap";});//gs.includes("rap");});//d["genre_larger"]);});
           console.log(gs)
 
         filteredFeatures.forEach(row => {
           singerToGenre[row.SongID] = row.genre_larger
         })
+        console.log(stateCounts)
+        console.log("Before Add")
+
 
         filteredHits.forEach( row => {
           if (row.Performer in singerToState) {
@@ -232,6 +253,8 @@
         map.selectAll(".state")
          .style("fill", d => colorScale( stateCounts[ idToState[d.id] ]) );
          console.log(stateCounts)
+         console.log("AFter add")
+
 
 
 //COPIED from https://gist.github.com/umidjons/9614157
@@ -258,6 +281,23 @@ return sortable; // array in format [ [ key1, val1 ], [ key2, val2 ], ... ]
             d3.select("p#third").text("3. "+ newcounts[2] )
             d3.select("p#fourth").text("4. "+ newcounts[3] )
             d3.select("p#fifth").text("5. "+ newcounts[4] )
+
+
+
+            function sum( obj ) {
+  var sum = 0;
+  for( var el in obj ) {
+    if( obj.hasOwnProperty( el ) ) {
+      if (!isNaN(obj[el] ))
+      sum += parseFloat( obj[el] );
+    }
+  }
+  return sum;
+}
+
+            console.log(sum(stateCounts))
+            console.log("total^^")
+
 
 
 }
@@ -292,7 +332,7 @@ update("2000")
 
 
       //d3.selectAll(".genres").on("change",update(sliderTime.value().toString()));
-      d3.selectAll("input.genres").on("change",function(d){
+      d3.selectAll("input.genres").on("change",function(d){ sliderTime.value(2000)
         update("2000");});
 
 //      console.log(sliderTime.value().toString())
@@ -412,13 +452,9 @@ update("2000")
 
     <div id="checkboxes">
     <input type="checkbox" class="genres" value="rap"><label>Rap</label>
-    <input type="checkbox" class="genres" value="hip-hop"><label>Hip-Hop</label>
-    <input type="checkbox" class="genres" value="reggaeton"><label>Reggaeton</label>
     <input type="checkbox" class="genres" value="pop"><label>Pop</label>
     <input type="checkbox" class="genres" value="country"><label>Country</label>
     <input type="checkbox" class="genres" value="latin"><label>Latin</label>
-    <input type="checkbox" class="genres" value="brostep"><label>Brostep</label>
-    <input type="checkbox" class="genres" value="hollywood"><label>Hollywood</label>
     </div>
 
 
