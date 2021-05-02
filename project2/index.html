@@ -49,47 +49,63 @@
         height: 150px;
         padding: 0;
       }
+
+      #list {
+        display: inline;
+      }
+
+      #map {
+         display: inline;
+      }
+
+      body {
+        display: inline;
+      }
+
     </style>
   </head>
 
   <body>
-    <h2 style="color:darkblue; font-family:Arial;"> Singer hometowns per genre </h2>
+    <h2 style="color:darkblue; font-family:Arial; font-size: 24px"> Singer hometowns per genre </h2>
 
 
-    <p id="first"></p>
-    <p id="second"></p>
-    <p id="third"></p>
-    <p id="fourth"></p>
-    <p id="fifth"></p>
-
-    <svg id= "map" width="1000" height="800" style="border: 1px solid black">
+    <svg id= "map" width="660" height="520" style="border: 1px solid black; display: inline;">
       <text id="label" x="43" y="12" text-anchor="start" alignment-baseline="hanging"></text>
-    </svg> <br>
+    </svg>
 
-  <div class="row align-items-center">
-    <div class="col-sm"><div id="slider-time"></div></div>
+      <div id="list" style="padding-left: 1em; display: inline-block; vertical-align: top; font-size: 18px;">
+      <p id="first" style="display: block;"></p>
+      <p id="second" style="display: block;"></p>
+      <p id="third" style="display: block;"></p>
+      <p id="fourth" style="display: block;"></p>
+      <p id="fifth" style="display: block;"></p>
+      </div>
+
+      <div id="blurb" style="display: inline-block; text-align: center; vertical-align: top; font-size: 16px;">
+        <p style="margin: auto; margin-left: 2em; margin-right: auto; width: 25em;">Our project studies the geographic locations
+          of the hometowns of the artists in the top 100 songs each year separated by genre. By selecting one or more
+          of the genres below, you can see the number of artists from each state that made it to the top 100 songs in
+          the year indicated by the slider. The top 5 states are indicated on the right and you can hover your mouse
+          over any of the states in the map to see the exact number of artists from that state.</p>
+
+      </div>
+
+    <br>
+
+  <div class="row align-items-center" style="display:inline-block">
+    <div class="col-sm" style="display: inline;"><div id="slider-time"></div></div>
   </div>
+
+
+  <div id="checkboxes" style="display: inline-block; vertical-align: top;">
+  <input type="checkbox" class="genres" value="rap" style="display: inline;"><label>Rap</label>
+  <input type="checkbox" class="genres" value="pop" style="display: inline;"><label>Pop</label>
+  <input type="checkbox" class="genres" value="country" style="display: inline;"><label>Country</label>
+  <input type="checkbox" class="genres" value="latin" style="display: inline;"><label>Latin</label>
+  </div>
+
+
     <script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     const svg = d3.select("svg#map");
@@ -103,28 +119,13 @@
 
     const requestData = async function() {
       const hometownData = await d3.csv("data/hometowns.csv", d3.autotype);
-      console.log(hometownData);
       const spotifyFeatures = await d3.csv("data/spotify_features.csv", d3.autotype);
-      console.log(spotifyFeatures);
       const spotifyHits = await d3.csv("data/spotify_hits.csv", d3.autotype);
-      console.log(spotifyHits);
       const stateIDs = await d3.tsv("data/us-state-names.tsv");
       const us = await d3.json("data/us-smaller.json");
 
       const yearExtent = d3.extent(spotifyHits, d => d["Year"] )
       const yearRange = d3.range(yearExtent[0],yearExtent[1])
-
-
-      //COPIED from
-    //  var newArray = hometownData.filter(function (el) {
-    //    return el.price <= 1000 &&
-    //           el.sqft >= 500 &&
-    //           el.num_of_beds >=2 &&
-    //           el.num_of_baths >= 2.5;
-    //  });
-
-      //COPIED
-
 
 
 
@@ -165,7 +166,7 @@
 
 
 
-      var genres = ["rap", "hip-hop", "reggaeton", "pop", "country", "latin", "brostep", "post-Grunge", "hollywood"];
+      var genres = ["rap", "pop", "country", "latin"];
 
       function update(year) {
 
@@ -178,12 +179,8 @@
         }
       });
 
-      if(choices.length > 0){
-        console.log(genres.filter(function(d,i){return choices.includes(d);}));
-        showMap(year, genres.filter(function(d,i){return choices.includes(d);}));
-      } else {
-        showMap(year, genres);
-      }
+
+      showMap(year, genres.filter(function(d,i){return choices.includes(d);}));
       }
 
 
@@ -212,35 +209,19 @@
         });
 
 
-        console.log("updated")
-
-
-
-
-
-
-
-
-
-
-
 
         map.selectAll(".state").style("fill","white");
-        console.log("white")
 
         filteredHits = spotifyHits.filter(
           (d) => {return d["Year"] === year; } )
 
 
         filteredFeatures = spotifyFeatures.filter(
-          (d) => {return gs.includes(d["genre_larger"]);});//d["genre_larger"]==="rap";});//gs.includes("rap");});//d["genre_larger"]);});
-          console.log(gs)
+          (d) => {return gs.includes(d["genre_larger"]);});
 
         filteredFeatures.forEach(row => {
           singerToGenre[row.SongID] = row.genre_larger
         })
-        console.log(stateCounts)
-        console.log("Before Add")
 
 
         filteredHits.forEach( row => {
@@ -252,8 +233,7 @@
 
         map.selectAll(".state")
          .style("fill", d => colorScale( stateCounts[ idToState[d.id] ]) );
-         console.log(stateCounts)
-         console.log("AFter add")
+
 
 
 
@@ -283,28 +263,11 @@ return sortable; // array in format [ [ key1, val1 ], [ key2, val2 ], ... ]
             d3.select("p#fifth").text("5. "+ newcounts[4] )
 
 
-
-            function sum( obj ) {
-  var sum = 0;
-  for( var el in obj ) {
-    if( obj.hasOwnProperty( el ) ) {
-      if (!isNaN(obj[el] ))
-      sum += parseFloat( obj[el] );
-    }
-  }
-  return sum;
-}
-
-            console.log(sum(stateCounts))
-            console.log("total^^")
-
-
-
 }
 
 update("2000")
 
-      // The following is adapted from above;
+      // The following is adapted from above
       // https://bl.ocks.org/johnwalley/e1d256b81e51da68f7feb632a53c3518
       var sliderTime = d3
         .sliderBottom()
@@ -331,18 +294,8 @@ update("2000")
       gTime.call(sliderTime);
 
 
-      //d3.selectAll(".genres").on("change",update(sliderTime.value().toString()));
       d3.selectAll("input.genres").on("change",function(d){ sliderTime.value(2000)
         update("2000");});
-
-//      console.log(sliderTime.value().toString())
-
-
-
-
-
-
-
 
 
 
@@ -389,7 +342,6 @@ update("2000")
 
       let state = d3.select(this);
       let stateID = state.datum().id;
-      console.log(state.datum())
 
 
       var mo = topojson.mesh(us, us.objects.states, function(a, b) { return a.id === stateID || b.id === stateID; });
@@ -420,27 +372,6 @@ update("2000")
 
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
     requestData();
 
@@ -450,12 +381,6 @@ update("2000")
 
     </script>
 
-    <div id="checkboxes">
-    <input type="checkbox" class="genres" value="rap"><label>Rap</label>
-    <input type="checkbox" class="genres" value="pop"><label>Pop</label>
-    <input type="checkbox" class="genres" value="country"><label>Country</label>
-    <input type="checkbox" class="genres" value="latin"><label>Latin</label>
-    </div>
 
 
 
