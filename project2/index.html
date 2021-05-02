@@ -66,7 +66,8 @@
   </head>
 
   <body>
-    <h2 style="color:darkblue; font-family:Arial; font-size: 24px"> Singer hometowns per genre </h2>
+    <h2 style="color:darkblue; font-family:Arial; font-size: 24px"> Hometowns of Billboard Top 100 Song
+    </h2>
 
 
     <svg id= "map" width="660" height="520" style="border: 1px solid black; display: inline;">
@@ -82,11 +83,7 @@
       </div>
 
       <div id="blurb" style="display: inline-block; text-align: center; vertical-align: top; font-size: 16px;">
-        <p style="margin: auto; margin-left: 2em; margin-right: auto; width: 25em;">Our project studies the geographic locations
-          of the hometowns of the artists in the top 100 songs each year separated by genre. By selecting one or more
-          of the genres below, you can see the number of artists from each state that made it to the top 100 songs in
-          the year indicated by the slider. The top 5 states are indicated on the right and you can hover your mouse
-          over any of the states in the map to see the exact number of artists from that state.</p>
+        <p style="margin: auto; margin-left: 2em; margin-right: auto; width: 25em;">Our project studies the hometowns of our Billboard Top 100 artists separated by genre. By selecting one or more of the genres below, you can see the number of billboard hits written by artists from each state in the year indicated by the slider. The top 5 states are indicated on the right and you can hover your mouse over any of the states in the map to see the exact number of artists from that state.</p>
 
       </div>
 
@@ -98,10 +95,10 @@
 
 
   <div id="checkboxes" style="display: inline-block; vertical-align: top;">
-  <input type="checkbox" class="genres" value="rap" style="display: inline;"><label>Rap</label>
-  <input type="checkbox" class="genres" value="pop" style="display: inline;"><label>Pop</label>
-  <input type="checkbox" class="genres" value="country" style="display: inline;"><label>Country</label>
-  <input type="checkbox" class="genres" value="latin" style="display: inline;"><label>Latin</label>
+  <input type="checkbox" class="genres" value="rap" style="display: inline;" checked=True><label>Rap</label>
+  <input type="checkbox" class="genres" value="pop" style="display: inline;" checked=True><label>Pop</label>
+  <input type="checkbox" class="genres" value="country" style="display: inline;" checked=True><label>Country</label>
+  <input type="checkbox" class="genres" value="latin" style="display: inline;" checked=True><label>Latin</label>
   </div>
 
 
@@ -119,15 +116,16 @@
 
     const requestData = async function() {
       const hometownData = await d3.csv("data/hometowns.csv", d3.autotype);
-      const spotifyFeatures = await d3.csv("data/spotify_features.csv", d3.autotype);
-      const spotifyHits = await d3.csv("data/spotify_hits.csv", d3.autotype);
+      const billboardFeatures = await d3.csv("data/billboard_hits.csv", d3.autotype);
       const stateIDs = await d3.tsv("data/us-state-names.tsv");
       const us = await d3.json("data/us-smaller.json");
+      console.log(hometownData)
+      console.log(billboardFeatures)
+      console.log(stateIDs)
+      console.log(us)
 
-      const yearExtent = d3.extent(spotifyHits, d => d["Year"] )
+      const yearExtent = d3.extent(billboardFeatures, d => d["Year"] )
       const yearRange = d3.range(yearExtent[0],yearExtent[1])
-
-
 
       var states = topojson.feature(us, us.objects.states);
       var statesMesh = topojson.mesh(us, us.objects.states);
@@ -148,7 +146,7 @@
          .attr("d", path);
 
       // hard coding min and max so it's the same scale regardless of filter
-      const colorScale = d3.scaleSequentialLog(d3.interpolateBlues).domain([1,229]);
+      const colorScale = d3.scaleSequentialLog(d3.interpolateBlues).domain([1,558]);
 
       let stateCounts = {};
       let idToState = {};
@@ -163,7 +161,6 @@
         stateCounts[row.code] = 0;
         idToState[row.id] = row.code;
       });
-
 
 
       var genres = ["rap", "pop", "country", "latin"];
@@ -212,11 +209,11 @@
 
         map.selectAll(".state").style("fill","white");
 
-        filteredHits = spotifyHits.filter(
+        filteredHits = billboardFeatures.filter(
           (d) => {return d["Year"] === year; } )
 
 
-        filteredFeatures = spotifyFeatures.filter(
+        filteredFeatures = billboardFeatures.filter(
           (d) => {return gs.includes(d["genre_larger"]);});
 
         filteredFeatures.forEach(row => {
@@ -256,11 +253,11 @@ return sortable; // array in format [ [ key1, val1 ], [ key2, val2 ], ... ]
 //COPIED
 
             newcounts = sortProperties(stateCounts)
-            d3.select("p#first").text("1. "+ newcounts[0] )
-            d3.select("p#second").text("2. "+ newcounts[1] )
-            d3.select("p#third").text("3. "+ newcounts[2] )
-            d3.select("p#fourth").text("4. "+ newcounts[3] )
-            d3.select("p#fifth").text("5. "+ newcounts[4] )
+            d3.select("p#first").text("1. "+ newcounts[0] + " songs")
+            d3.select("p#second").text("2. "+ newcounts[1] + " songs")
+            d3.select("p#third").text("3. "+ newcounts[2] + " songs")
+            d3.select("p#fourth").text("4. "+ newcounts[3] + " songs")
+            d3.select("p#fifth").text("5. "+ newcounts[4] + " songs")
 
 
 }
@@ -272,7 +269,7 @@ update("2000")
       var sliderTime = d3
         .sliderBottom()
         .min(2000)
-        .max(2020)
+        .max(2015)
         .step(1)
         .width(300)
         .tickFormat("")
