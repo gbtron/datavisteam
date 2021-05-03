@@ -146,7 +146,7 @@
          .attr("d", path);
 
       // hard coding min and max so it's the same scale regardless of filter
-      const colorScale = d3.scaleSequentialLog(d3.interpolateBlues).domain([1,558]);
+      const colorScale = d3.scaleSequentialLog(d3.interpolateYlGnBu).domain([1,135]);
 
       let stateCounts = {};
       let idToState = {};
@@ -229,8 +229,13 @@
         });
 
         map.selectAll(".state")
-         .style("fill", d => colorScale( stateCounts[ idToState[d.id] ]) );
-
+         .style("fill", d => {
+            if(stateCounts[ idToState[d.id] ] === 0){
+                return "white";
+            } else {
+                return colorScale( stateCounts[ idToState[d.id] ]) ;
+            }
+          })
 
 
 

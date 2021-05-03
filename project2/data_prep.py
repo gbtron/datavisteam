@@ -10,6 +10,10 @@ hometown_data2.to_csv("data/hometowns.csv",index=False)
 
 hometown_data3 = hometown_data[['Song Title', 'Artist Name', 'Unique ID', 'Year', 'Peak Position', 'Genre 1']].drop_duplicates()
 hometown_data3 = hometown_data3.rename(columns={"Artist Name": "Performer", "Peak Position":"Peak_Position","Song Title":"Song", 'Unique ID':'SongID'})
+hometown_data3_noPeak = hometown_data3.drop("Peak_Position",axis=1).drop_duplicates()
+hometown_data3_peak = hometown_data3.groupby(['Song', 'Performer', 'SongID', 'Year', 'Genre 1'],as_index=False)["Peak_Position"].min()
+hometown_data3 = hometown_data3_noPeak.merge(hometown_data3_peak)
+
 hometown_data3['genre_larger'] = hometown_data3['Genre 1'].apply(lambda x: "rap" if "rap" in x 
 	else ("latin" if "latin" in x 
 	else ("country" if "country" in x 
