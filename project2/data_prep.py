@@ -16,4 +16,6 @@ hometown_data3['genre_larger'] = hometown_data3['Genre 1'].apply(lambda x: "rap"
 	else ("hip hop" if "hip hop" in x 
 	else ("rock" if "rock" in x 
 	else ("pop" if "pop" in x else x))))))
+
+hometown_data3 = hometown_data3[((hometown_data3.Year>=2000) & (hometown_data3.Year<=2015))]
 hometown_data3.to_csv("data/billboard_hits.csv",index=False)
