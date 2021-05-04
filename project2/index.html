@@ -42,7 +42,7 @@
       .graticule {
         fill: none;
         stroke: grey;
-        stroke-width: 1px;
+        stroke-width: 0px;
       }
       .slider-wrapper {
         width: 20px;
@@ -50,12 +50,27 @@
         padding: 0;
       }
 
+    .grid-parent {
+      display: grid;
+      grid-template-columns: 1fr 1fr
+    }
+
       #list {
         display: inline;
+        padding-right:10px;
+        border:0px solid black;
       }
 
       #map {
          display: inline;
+      }
+      #checkboxes{
+        border: 1px solid black;
+      }
+
+      #blurb{
+        text-align: center;
+        font-size: 25px;
       }
 
       body {
@@ -66,14 +81,20 @@
   </head>
 
   <body>
-    <h2 style="color:darkblue; font-family:Arial; font-size: 24px"> Artist Hometowns for Billboard Top 100 Songs
+    <h2 style="color:darkblue; font-family:Arial; font-size: 2em; text-align:center;"> Hometowns of Billboard Top 100 Artists
     </h2>
+    <div class='parent grid-parent'>
+      <div class='child'>
+        <svg id= "map" width="1000" height="700" style="border: 0px solid black; display: inline;">
+          <text id="label" x="43" y="12" text-anchor="start" alignment-baseline="hanging"></text>
+        </svg>
+      </div>
+      <div class='child'>
+    
+      <div id="blurb" >
+        <p style="margin-top: 20px; margin-left: 0px; margin-right: 20px;">Our project studies the hometowns of the Billboard Top 100 artists. By filtering through genre, you can see the number of billboard hits written by artists from each state in the year indicated by the slider. The top 5 states are indicated and you can hover your mouse over any of the states in the map to see the exact number of songs coming from that state.</p>
 
-
-    <svg id= "map" width="660" height="520" style="border: 1px solid black; display: inline;">
-      <text id="label" x="43" y="12" text-anchor="start" alignment-baseline="hanging"></text>
-    </svg>
-
+      </div>
       <div id="list" style="padding-left: 1em; display: inline-block; vertical-align: top; font-size: 18px;">
       <p id="first" style="display: block;"></p>
       <p id="second" style="display: block;"></p>
@@ -82,24 +103,27 @@
       <p id="fifth" style="display: block;"></p>
       </div>
 
-      <div id="blurb" style="display: inline-block; text-align: center; vertical-align: top; font-size: 16px;">
-        <p style="margin: auto; margin-left: 2em; margin-right: auto; width: 25em;">Our project studies the hometowns of our Billboard Top 100 artists separated by genre. By selecting one or more of the genres below, you can see the number of billboard hits written by artists from each state in the year indicated by the slider. The top 5 states are indicated on the right and you can hover your mouse over any of the states in the map to see the exact number of artists from that state.</p>
 
+      <br>
+      <div class="row align-items-center" style="display:inline">
+        <div class="col-sm" style="display: inline;"><div id="slider-time"></div></div>
       </div>
 
-    <br>
+      <br>
 
-  <div class="row align-items-center" style="display:inline-block">
-    <div class="col-sm" style="display: inline;"><div id="slider-time"></div></div>
-  </div>
+      <div id="checkboxes" style="display: inline-block; vertical-align: top;">
+      <input type="checkbox" class="genres" value="rap" style="display: inline;" checked> <label>Rap</label>
+      <input type="checkbox" class="genres" value="pop" style="display: inline;" checked> <label>Pop</label>
+      <input type="checkbox" class="genres" value="country" style="display: inline;" checked> <label>Country</label>
+      <input type="checkbox" class="genres" value="latin" style="display: inline;" checked> <label>Latin</label>
+      </div>
+      <br>
+      </div>
+
+    </div>
 
 
-  <div id="checkboxes" style="display: inline-block; vertical-align: top;">
-  <input type="checkbox" class="genres" value="rap" style="display: inline;" checked=True><label>Rap</label>
-  <input type="checkbox" class="genres" value="pop" style="display: inline;" checked=True><label>Pop</label>
-  <input type="checkbox" class="genres" value="country" style="display: inline;" checked=True><label>Country</label>
-  <input type="checkbox" class="genres" value="latin" style="display: inline;" checked=True><label>Latin</label>
-  </div>
+
 
 
     <script>
@@ -296,7 +320,7 @@ update("2000")
       gTime.call(sliderTime);
 
 
-      d3.selectAll("input.genres").on("change",function(d){ sliderTime.value(2000)
+      d3.selectAll("input.genres").on("change",function(d){
         update("2000");});
 
 
